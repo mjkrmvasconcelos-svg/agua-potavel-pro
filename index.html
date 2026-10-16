@@ -9,66 +9,11 @@
 <header><div class="brand">💧 Água Potável <b>Pro</b></div><small>Controle operacional de tratamento</small></header>
 <nav><button class="tab active" data-tab="painel">Painel</button><button class="tab" data-tab="proveta">Proveta</button><button class="tab" data-tab="dosagem">Dosagens</button><button class="tab" data-tab="cronometros">Cronômetros</button><button class="tab" data-tab="historico">Histórico</button></nav>
 <main>
-<section id="painel" class="page active">
-<h1>Painel operacional</h1><p class="muted">Registre medições, calcule vazão e estime consumo com as dosagens definidas pelo responsável técnico.</p>
-<div class="cards"><div class="card"><span>Registros salvos</span><strong id="count">0</strong></div><div class="card"><span>Último registro</span><strong id="last">—</strong></div></div>
-<h2>Novo registro</h2>
-<form id="recordForm" class="panel">
-<label>Data e hora<input id="date" type="datetime-local" required></label>
-<label>Operador<input id="operator" placeholder="Nome do operador"></label>
-<div class="grid2"><label>pH<input id="ph" type="number" step="0.01" min="0" max="14" placeholder="Ex.: 7,2"></label><label>Turbidez (uT)<input id="turbidity" type="number" min="0" step="0.01" placeholder="Resultado"></label></div>
-<label>Observações<textarea id="notes" rows="2" placeholder="Condições da água, ajustes, ocorrências..."></textarea></label>
-<button class="primary" type="submit">Salvar registro</button>
-</form>
-<div class="notice">Importante: este aplicativo é uma ferramenta de registro e cálculo. Não determina sozinho a dosagem ideal nem comprova potabilidade. Confirme parâmetros e dosagens com ensaios, procedimento operacional e responsável técnico.</div>
-</section>
-<section id="proveta" class="page">
-<h1>Teste de proveta</h1><p class="muted">Informe o volume recolhido e o tempo necessário para encher a proveta com água.</p>
-<div class="panel">
-<label>Volume da proveta (mL)<input id="pv" type="number" min="0.1" step="any" value="500"></label>
-<div class="grid2"><label>Minutos<input id="pm" type="number" min="0" step="1" value="0"></label><label>Segundos<input id="ps" type="number" min="0" max="59" step="1" value="30"></label></div>
-<button class="primary" id="calcFlow">Calcular vazão</button><div id="flowResult" class="result">Informe as medições e calcule.</div>
-<button id="saveFlow" class="secondary" disabled>Salvar resultado no histórico</button>
-</div>
-<p class="muted">Fórmula: vazão (L/min) = volume coletado (mL) ÷ tempo (s) × 60 ÷ 1.000. Faça a medição em condições estáveis e repita para verificar consistência.</p>
-</section>
-<section id="dosagem" class="page">
-<h1>Calculadora de produtos</h1><p class="muted">Barrilha, sulfato e cal hidratada (Tina). Digite a dosagem definida pelo ensaio de tratabilidade ou procedimento aprovado.</p>
-<div class="panel">
-<label>Produto<select id="chemical"><option>Barrilha</option><option>Sulfato de alumínio</option><option>Cal hidratada (Tina)</option></select></label>
-<label>Vazão de água (m³/h)<input id="waterFlow" type="number" min="0" step="any" placeholder="Ex.: 12"></label>
-<label>Dosagem aprovada (mg/L)<input id="dose" type="number" min="0" step="any" placeholder="Definida pelo operador responsável"></label>
-<label>Horas de operação por dia<input id="hours" type="number" min="0" max="24" step="0.5" value="24"></label>
-<label>Concentração da solução (%) <span class="muted">opcional para cálculo de solução</span><input id="conc" type="number" min="0.01" max="100" step="any" placeholder="Ex.: 5"></label>
-<button class="primary" id="calcDose">Calcular consumo</button><div id="doseResult" class="result">Preencha os campos para calcular.</div>
-<button class="secondary" id="saveDose" disabled>Salvar cálculo no histórico</button>
-</div>
-<div class="notice">O cálculo em kg/dia considera a dosagem informada em mg/L como produto equivalente. Para solução preparada, a conversão depende da concentração real, densidade e pureza do produto; confirme a ficha técnica. Não use valores sugeridos automaticamente.</div>
-</section>
-<section id="cronometros" class="page">
-<h1>Cronômetros de dosagem</h1>
-<p class="muted">Cronômetros independentes para acompanhar o tempo de operação de cada dosador. Eles medem o tempo decorrido; não acionam bombas automaticamente.</p>
-<div class="panel timer-panel">
-<h2>🧪 Barrilha</h2>
-<div class="timer" id="barrilhaDisplay">00:00:00</div>
-<div class="toolbar"><button class="primary" id="barrilhaStart">Iniciar</button><button class="secondary" id="barrilhaPause" disabled>Pausar</button><button class="secondary" id="barrilhaReset">Zerar</button></div>
-<label>Observação da operação<input id="barrilhaNote" placeholder="Ex.: ajuste de pH / tanque 1"></label>
-<button class="secondary" id="barrilhaSave">Salvar tempo no histórico</button>
-</div>
-<div class="panel timer-panel">
-<h2>🧪 Sulfato de alumínio</h2>
-<div class="timer" id="sulfatoDisplay">00:00:00</div>
-<div class="toolbar"><button class="primary" id="sulfatoStart">Iniciar</button><button class="secondary" id="sulfatoPause" disabled>Pausar</button><button class="secondary" id="sulfatoReset">Zerar</button></div>
-<label>Observação da operação<input id="sulfatoNote" placeholder="Ex.: coagulação / tanque 1"></label>
-<button class="secondary" id="sulfatoSave">Salvar tempo no histórico</button>
-</div>
-<div class="notice">O cronômetro é apenas um registro de tempo. Siga a dosagem e o tempo de contato definidos no procedimento operacional aprovado; confirme os resultados por medições e ensaios.</div>
-</section>
-<section id="historico" class="page">
-<h1>Histórico e relatórios</h1><div class="toolbar"><button id="exportCsv" class="secondary">Exportar CSV</button><button id="print" class="secondary">Imprimir / PDF</button><button id="clear" class="danger">Apagar histórico</button></div>
-<div id="historyList"></div>
-</section>
-</main>
-<footer>Água Potável Pro • Registros ficam neste dispositivo.</footer>
-<script src="app.js"></script>
-</body></html>
+<section id="painel" class="page active"><h1>Painel operacional</h1><p class="muted">Registre medições, calcule vazão e estime consumo com as dosagens definidas pelo responsável técnico.</p><div class="cards"><div class="card"><span>Registros salvos</span><strong id="count">0</strong></div><div class="card"><span>Último registro</span><strong id="last">—</strong></div></div><h2>Novo registro</h2><form id="recordForm" class="panel"><label>Data e hora<input id="date" type="datetime-local" required></label><label>Operador<input id="operator" placeholder="Nome do operador"></label><div class="grid2"><label>pH<input id="ph" type="number" step="0.01" min="0" max="14" placeholder="Ex.: 7,2"></label><label>Turbidez (uT)<input id="turbidity" type="number" min="0" step="0.01" placeholder="Resultado"></label></div><label>Observações<textarea id="notes" rows="2" placeholder="Condições da água, ajustes, ocorrências..."></textarea></label><button class="primary" type="submit">Salvar registro</button></form><div class="notice">Este aplicativo é uma ferramenta de registro e cálculo. Não determina sozinho a dosagem ideal nem comprova potabilidade. Confirme parâmetros e dosagens com ensaios, procedimento operacional e responsável técnico.</div></section>
+<section id="proveta" class="page"><h1>Teste de proveta</h1><p class="muted">Informe o volume recolhido e o tempo necessário para encher a proveta com água.</p><div class="panel"><label>Volume da proveta (mL)<input id="pv" type="number" min="0.1" step="any" value="500"></label><div class="grid2"><label>Minutos<input id="pm" type="number" min="0" step="1" value="0"></label><label>Segundos<input id="ps" type="number" min="0" max="59" step="1" value="30"></label></div><button class="primary" id="calcFlow">Calcular vazão</button><div id="flowResult" class="result">Informe as medições e calcule.</div><button class="secondary" id="saveFlow" disabled>Salvar resultado no histórico</button></div><p class="muted">Fórmula: vazão (L/min) = volume coletado (mL) ÷ tempo (s) × 60 ÷ 1.000.</p></section>
+<section id="dosagem" class="page"><h1>Calculadora de produtos</h1><p class="muted">Use a dosagem definida por ensaio de tratabilidade ou procedimento aprovado.</p><div class="panel"><label>Produto<select id="chemical"><option>Barrilha</option><option>Sulfato de alumínio</option><option>Cal hidratada (Tina)</option></select></label><label>Vazão de água (m³/h)<input id="waterFlow" type="number" min="0" step="any" placeholder="Ex.: 12"></label><label>Dosagem aprovada (mg/L)<input id="dose" type="number" min="0" step="any" placeholder="Dosagem aprovada"></label><label>Horas de operação por dia<input id="hours" type="number" min="0" max="24" step="0.5" value="24"></label><label>Concentração da solução (%) — opcional<input id="conc" type="number" min="0.01" max="100" step="any" placeholder="Ex.: 5"></label><button class="primary" id="calcDose">Calcular consumo</button><div id="doseResult" class="result">Preencha os campos para calcular.</div><button class="secondary" id="saveDose" disabled>Salvar cálculo no histórico</button></div><div class="notice">Os resultados são estimativas. Para solução preparada, considere concentração real, densidade e pureza. Não use valores sugeridos automaticamente.</div></section>
+<section id="cronometros" class="page"><h1>Cronômetros de dosagem</h1><p class="muted">Cronômetros independentes. O alerta sonoro toca ao completar 60 segundos. Eles não acionam bombas automaticamente.</p>
+<div class="panel timer-panel"><h2>🧪 Barrilha</h2><div class="timer" id="barrilhaDisplay">00:00:00</div><div class="toolbar"><button class="primary" id="barrilhaStart">Iniciar</button><button class="secondary" id="barrilhaPause" disabled>Pausar</button><button class="secondary" id="barrilhaReset">Zerar</button></div><label>Volume medido (mL)<input id="barrilhaVolume" type="number" min="0" step="any" placeholder="Ex.: 1800"></label><label>Densidade da solução (g/mL) — opcional<input id="barrilhaDensity" type="number" min="0" step="any" placeholder="Informe a densidade real"></label><div id="barrilhaCalc" class="result">Informe o volume para calcular.</div><label>Observação da operação<input id="barrilhaNote" placeholder="Ex.: ajuste de pH / tanque 1"></label><button class="secondary" id="barrilhaSave">Salvar registro</button></div>
+<div class="panel timer-panel"><h2>🧪 Sulfato de alumínio</h2><div class="timer" id="sulfatoDisplay">00:00:00</div><div class="toolbar"><button class="primary" id="sulfatoStart">Iniciar</button><button class="secondary" id="sulfatoPause" disabled>Pausar</button><button class="secondary" id="sulfatoReset">Zerar</button></div><label>Volume medido (mL)<input id="sulfatoVolume" type="number" min="0" step="any" placeholder="Ex.: 1800"></label><label>Densidade da solução (g/mL) — opcional<input id="sulfatoDensity" type="number" min="0" step="any" placeholder="Informe a densidade real"></label><div id="sulfatoCalc" class="result">Informe o volume para calcular.</div><label>Observação da operação<input id="sulfatoNote" placeholder="Ex.: coagulação / tanque 1"></label><button class="secondary" id="sulfatoSave">Salvar registro</button></div><div class="notice">A massa é estimada como volume × densidade informada. Confirme a densidade na ficha técnica ou por medição; ela varia conforme o produto e a concentração.</div></section>
+<section id="historico" class="page"><h1>Histórico e relatórios</h1><div class="toolbar"><button id="exportCsv" class="secondary">Exportar CSV</button><button id="print" class="secondary">Imprimir / PDF</button><button id="clear" class="danger">Apagar histórico</button></div><div id="historyList"></div></section>
+</main><footer>Água Potável Pro • Registros ficam neste dispositivo.</footer><script src="app.js"></script></body></html>
