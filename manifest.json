@@ -1,0 +1,10 @@
+{
+  "name": "Água Potável Pro",
+  "short_name": "Água Pro",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#075985",
+  "description": "Controle operacional de tratamento de água potável",
+  "icons": []
+}

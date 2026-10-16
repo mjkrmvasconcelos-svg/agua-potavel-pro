@@ -1,0 +1,34 @@
+const $=id=>document.getElementById(id);let records=JSON.parse(localStorage.getItem('aguaProRecords')||'[]');let latestFlow=null,latestDose=null;
+function localDate(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}$('date').value=localDate();
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active');render()}));
+function save(){localStorage.setItem('aguaProRecords',JSON.stringify(records));render()}
+$('calcFlow').onclick=()=>{let v=Number($('pv').value),t=Number($('pm').value)*60+Number($('ps').value);if(!(v>0&&t>0)){alert('Informe volume e tempo válidos.');return}let lpm=v/t*60/1000;latestFlow={type:'Proveta',date:new Date().toISOString(),volumeMl:v,timeSec:t,flowLmin:lpm,flowLh:lpm*60};$('flowResult').innerHTML=`<b>Vazão calculada</b><br>${lpm.toLocaleString('pt-BR',{maximumFractionDigits:4})} L/min<br>${(lpm*60).toLocaleString('pt-BR',{maximumFractionDigits:3})} L/h<br><span class="muted">Volume: ${v} mL • Tempo: ${t} s</span>`;$('saveFlow').disabled=false};
+$('saveFlow').onclick=()=>{if(latestFlow){records.unshift({...latestFlow,operator:$('operator').value||'',notes:'Medição de enchimento da proveta'});save();$('saveFlow').disabled=true;alert('Medição salva no histórico.')}};
+$('calcDose').onclick=()=>{let q=Number($('waterFlow').value),d=Number($('dose').value),h=Number($('hours').value),c=$('conc').value===''?null:Number($('conc').value);if(!(q>0&&d>=0&&h>0&&h<=24)){alert('Informe vazão maior que zero, dosagem válida e horas entre 0 e 24.');return}let kgDay=d*q*h/1000;let kgHour=d*q/1000;let solLday=c&&c>0?kgDay/(c/100)*1000:null;latestDose={type:'Dosagem',date:new Date().toISOString(),chemical:$('chemical').value,waterFlowM3h:q,doseMgL:d,hours:h,concentrationPct:c,kgDay,kgHour,solutionLday:solLday};$('doseResult').innerHTML=`<b>${latestDose.chemical}</b><br>Consumo estimado: <b>${kgDay.toLocaleString('pt-BR',{maximumFractionDigits:3})} kg/dia</b><br>Consumo durante operação: ${kgHour.toLocaleString('pt-BR',{maximumFractionDigits:4})} kg/h${solLday!==null?`<br>Equivalente teórico de solução: ${solLday.toLocaleString('pt-BR',{maximumFractionDigits:2})} L/dia (aproximação por % m/m, sem correção de densidade)`:''}<br><span class="muted">Vazão ${q} m³/h • Dosagem ${d} mg/L • ${h} h/dia</span>`;$('saveDose').disabled=false};
+$('saveDose').onclick=()=>{if(latestDose){records.unshift({...latestDose,operator:$('operator').value||'',notes:''});save();$('saveDose').disabled=true;alert('Cálculo salvo no histórico.')}};
+$('recordForm').onsubmit=e=>{e.preventDefault();records.unshift({type:'Registro operacional',date:new Date($('date').value).toISOString(),operator:$('operator').value,ph:$('ph').value,turbidity:$('turbidity').value,notes:$('notes').value});save();$('notes').value='';alert('Registro salvo.')};
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){ $('count').textContent=records.length;$('last').textContent=records.length?new Date(records[0].date).toLocaleDateString('pt-BR'):'—';let host=$('historyList');if(!records.length){host.innerHTML='<p class="muted">Nenhum registro salvo ainda.</p>';return}host.innerHTML=records.map((r,i)=>{let detail='';if(r.type==='Cronômetro')detail=`${esc(r.chemical)}; tempo registrado ${esc(r.elapsedFormatted||'—')}`;else if(r.type==='Proveta')detail=`Volume ${r.volumeMl} mL; tempo ${r.timeSec} s; vazão ${Number(r.flowLmin).toLocaleString('pt-BR')} L/min`;else if(r.type==='Dosagem')detail=`${esc(r.chemical)}; dosagem ${r.doseMgL} mg/L; vazão ${r.waterFlowM3h} m³/h; consumo ${Number(r.kgDay).toLocaleString('pt-BR')} kg/dia`;else detail=`pH: ${esc(r.ph||'—')}; turbidez: ${esc(r.turbidity||'—')} uT`;return `<article class="entry"><h3>${esc(r.type)} • ${new Date(r.date).toLocaleString('pt-BR')}</h3><p>${detail}</p>${r.operator?`<p>Operador: ${esc(r.operator)}</p>`:''}${r.notes?`<p>Observações: ${esc(r.notes)}</p>`:''}<button class="danger" onclick="removeRecord(${i})">Excluir</button></article>`}).join('')}
+window.removeRecord=i=>{if(confirm('Excluir este registro?')){records.splice(i,1);save()}};
+$('exportCsv').onclick=()=>{if(!records.length){alert('Não há registros para exportar.');return}const keys=[...new Set(records.flatMap(Object.keys))];const cell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const csv='\ufeff'+[keys.map(cell).join(';'),...records.map(r=>keys.map(k=>cell(r[k])).join(';'))].join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='relatorio_agua_potavel.csv';a.click();URL.revokeObjectURL(a.href)};
+$('print').onclick=()=>window.print();$('clear').onclick=()=>{if(confirm('Apagar permanentemente todos os registros deste dispositivo?')){records=[];save()}};
+// Cronômetros independentes para barrilha e sulfato
+const timers={
+ barrilha:{elapsed:0,startedAt:null,running:false,interval:null},
+ sulfato:{elapsed:0,startedAt:null,running:false,interval:null}
+};
+function fmtTime(ms){let sec=Math.floor(ms/1000),h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':')}
+function timerElapsed(key){const t=timers[key];return t.elapsed+(t.running?Date.now()-t.startedAt:0)}
+function renderTimer(key){$(key+'Display').textContent=fmtTime(timerElapsed(key));$(key+'Start').disabled=timers[key].running;$(key+'Pause').disabled=!timers[key].running}
+function startTimer(key){const t=timers[key];if(t.running)return;t.startedAt=Date.now();t.running=true;t.interval=setInterval(()=>renderTimer(key),250);renderTimer(key)}
+function pauseTimer(key){const t=timers[key];if(!t.running)return;t.elapsed+=Date.now()-t.startedAt;t.running=false;clearInterval(t.interval);t.interval=null;renderTimer(key)}
+function resetTimer(key){pauseTimer(key);timers[key].elapsed=0;timers[key].startedAt=null;renderTimer(key)}
+['barrilha','sulfato'].forEach(key=>{
+ $(key+'Start').onclick=()=>startTimer(key);
+ $(key+'Pause').onclick=()=>pauseTimer(key);
+ $(key+'Reset').onclick=()=>{if(confirm('Zerar o cronômetro de '+(key==='barrilha'?'barrilha':'sulfato')+'?'))resetTimer(key)};
+ $(key+'Save').onclick=()=>{pauseTimer(key);const ms=timerElapsed(key);if(ms<=0){alert('Inicie o cronômetro antes de salvar.');return}records.unshift({type:'Cronômetro',date:new Date().toISOString(),chemical:key==='barrilha'?'Barrilha':'Sulfato de alumínio',elapsedSeconds:Math.floor(ms/1000),elapsedFormatted:fmtTime(ms),notes:$(key+'Note').value||''});save();alert('Tempo salvo no histórico.')};
+});
+
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
